@@ -1,0 +1,34 @@
+{
+  "name": "vault-password-manager",
+  "version": "2.4.0",
+  "description": "VAULT — Password Manager",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "build-icon": "node scripts/generate-icon.js",
+    "extension:install": "node scripts/install-native-host.js",
+    "benchmark:pbkdf2": "node scripts/benchmark-pbkdf2.js",
+    "report:template": "node scripts/fill-final-report.js --template",
+    "report:capture": "electron scripts/run-report-capture.js",
+    "report:fill": "node scripts/fill-final-report.js",
+    "report:build": "node scripts/fill-final-report.js --capture",
+    "report:40": "node scripts/fill-final-report.js --compact-40",
+    "postinstall": "node -e \"require('fs').copyFileSync(require('path').join('node_modules','lucide','dist','umd','lucide.min.js'), 'src/renderer/lucide.min.js')\""
+  },
+  "keywords": [
+    "password-manager",
+    "vault",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "sharp": "^0.34.5"
+  },
+  "dependencies": {
+    "lucide": "^0.577.0",
+    "speakeasy": "^2.0.0"
+  }
+}

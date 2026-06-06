@@ -1,0 +1,774 @@
+  <!DOCTYPE html>
+  <html lang="tr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://icons.duckduckgo.com; script-src 'self'">
+    <title>VAULT — Password Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+
+  <div class="win-chrome is-locked" id="winChrome">
+    <div class="titlebar" data-electron-drag>
+      <svg class="tb-icon" viewBox="0 0 110 110" fill="none">
+        <rect x="4" y="4" width="102" height="102" rx="20" fill="#1a1d25"/>
+        <path d="M22 22 L55 82 L88 22" stroke="#30D5C8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="55" cy="62" r="9" fill="#1a1d25"/>
+        <rect x="51.5" y="64" width="7" height="12" rx="2" fill="#1a1d25"/>
+        <circle cx="55" cy="62" r="9" stroke="#30D5C8" stroke-width="2" fill="none"/>
+        <rect x="51.5" y="64" width="7" height="12" rx="2" stroke="#30D5C8" stroke-width="2" fill="none"/>
+      </svg>
+      <span class="tb-title">Vault — Password Manager</span>
+      <div class="tb-actions" data-electron-no-drag>
+        <button class="tb-btn" id="winMinimize" title="Küçült"><i data-lucide="minus"></i></button>
+        <button class="tb-btn" id="winMaximize" title="Büyüt / Geri Al"><i data-lucide="square" id="winMaximizeIcon"></i></button>
+        <button class="tb-btn tb-btn-close" id="winClose" title="Kapat"><i data-lucide="x"></i></button>
+      </div>
+    </div>
+
+    <!-- Kasa kilidi — data-electron-no-drag: tıklamaların çalışması için -->
+    <div class="lock-screen" id="lockScreen" data-electron-no-drag>
+      <div class="lock-content" id="lockContent">
+        <div class="lock-setup is-active" id="lockSetup">
+          <div class="lock-card">
+            <div class="lock-logo-wrap">
+              <div class="lock-logo-icon">
+                <svg viewBox="0 0 110 110" fill="none" style="width:32px;height:32px">
+                  <path d="M22 22 L55 82 L88 22" stroke="#2DD4BF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <circle cx="55" cy="62" r="9" stroke="#2DD4BF" stroke-width="3" fill="none"/>
+                  <rect x="51.5" y="64" width="7" height="12" rx="2" stroke="#2DD4BF" stroke-width="3" fill="none"/>
+                </svg>
+              </div>
+              <div class="lock-badge">Vault — Şifre Kasası</div>
+            </div>
+            <h1 class="lock-title">Master Şifre Belirleyin</h1>
+            <p class="lock-desc">Kasayı korumak için en az 6 karakterlik bir şifre oluşturun. Bu şifreyi unutmayın!</p>
+            <div class="lock-form">
+              <div class="field"><div class="field-label">Yeni şifre</div><div class="field-box"><input type="password" id="lockSetupPw" placeholder="••••••••"></div></div>
+              <div class="field"><div class="field-label">Şifreyi tekrarla</div><div class="field-box"><input type="password" id="lockSetupConfirm" placeholder="••••••••"></div></div>
+              <p class="lock-error" id="lockSetupError"></p>
+              <button type="button" class="btn-add-home lock-btn" id="lockSetupBtn"><i data-lucide="lock"></i> Kasayı Oluştur</button>
+            </div>
+          </div>
+        </div>
+        <div class="lock-unlock" id="lockUnlock">
+          <div class="lock-card">
+            <div class="lock-logo-wrap">
+              <div class="lock-logo-icon">
+                <svg viewBox="0 0 110 110" fill="none" style="width:32px;height:32px">
+                  <path d="M22 22 L55 82 L88 22" stroke="#2DD4BF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <circle cx="55" cy="62" r="9" stroke="#2DD4BF" stroke-width="3" fill="none"/>
+                  <rect x="51.5" y="64" width="7" height="12" rx="2" stroke="#2DD4BF" stroke-width="3" fill="none"/>
+                </svg>
+              </div>
+              <div class="lock-badge">Vault — Şifre Kasası</div>
+            </div>
+            <h1 class="lock-title">Kasaya Giriş</h1>
+            <p class="lock-desc">Devam etmek için master şifrenizi girin</p>
+            <div class="lock-form">
+              <div class="field"><div class="field-label">Master şifre</div><div class="field-box"><input type="password" id="lockUnlockPw" placeholder="••••••••"></div></div>
+              <p class="lock-error" id="lockUnlockError"></p>
+              <button type="button" class="btn-add-home lock-btn" id="lockUnlockBtn"><i data-lucide="unlock"></i> Aç</button>
+              <button type="button" class="btn-add-home lock-btn secondary" id="lockBioBtn" style="display:none; margin-top:12px; background:transparent; border:1px solid var(--k-border); color:var(--k-text)"><i data-lucide="fingerprint"></i> Windows Hello ile Aç</button>
+            </div>
+          </div>
+        </div>
+        <div class="lock-2fa" id="lock2fa" style="display:none">
+          <div class="lock-card">
+            <div class="lock-logo-wrap">
+              <div class="lock-logo-icon">
+                <svg viewBox="0 0 110 110" fill="none" style="width:32px;height:32px">
+                  <path d="M22 22 L55 82 L88 22" stroke="#2DD4BF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <circle cx="55" cy="62" r="9" stroke="#2DD4BF" stroke-width="3" fill="none"/>
+                  <rect x="51.5" y="64" width="7" height="12" rx="2" stroke="#2DD4BF" stroke-width="3" fill="none"/>
+                </svg>
+              </div>
+              <div class="lock-badge">Vault — İki Adımlı Doğrulama</div>
+            </div>
+            <h1 class="lock-title">Doğrulama Kodu</h1>
+            <p class="lock-desc">Uygulamanızdaki 6 haneli kodu girin</p>
+            <div class="lock-form">
+              <div class="field"><div class="field-label">OTP Kodu</div><div class="field-box"><input type="text" id="lock2faCode" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing:4px; font-size:18px"></div></div>
+              <p class="lock-error" id="lock2faError"></p>
+              <button type="button" class="btn-add-home lock-btn" id="lock2faBtn"><i data-lucide="shield-check"></i> Doğrula</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-layout" id="appLayout">
+      <nav class="nav-sidebar">
+        <div class="nav-logo">
+          <div class="nav-logo-icon">
+            <svg viewBox="0 0 110 110" fill="none" style="width:20px;height:20px">
+              <path d="M22 22 L55 82 L88 22" stroke="#2DD4BF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <circle cx="55" cy="62" r="9" fill="#fff"/>
+              <rect x="51.5" y="64" width="7" height="12" rx="2" fill="#fff"/>
+            </svg>
+          </div>
+          <div class="nav-logo-info">
+            <div class="nav-logo-txt">Vault</div>
+            <div class="nav-logo-sub">Şifre Yöneticisi</div>
+          </div>
+        </div>
+        <div class="nav-items">
+          <div class="nav-group">
+            <div class="nav-group-label">Girişler</div>
+            <div class="nav-item active" data-route="home"><i data-lucide="key" class="nav-icon"></i><span>Parolalar</span></div>
+            <div class="nav-item" data-route="cards"><i data-lucide="credit-card" class="nav-icon"></i><span>Kartlar</span></div>
+            <div class="nav-item" data-route="payments"><i data-lucide="receipt" class="nav-icon"></i><span>Ödemeler</span></div>
+            <div class="nav-item" data-route="notes"><i data-lucide="file-text" class="nav-icon"></i><span>Gizli Notlar</span></div>
+            <div class="nav-item" data-route="files"><i data-lucide="folder" class="nav-icon"></i><span>Dosyalar</span></div>
+          </div>
+          <div class="nav-item" data-route="security"><i data-lucide="sparkles" class="nav-icon"></i><span>Şifre Üret</span></div>
+          <div class="nav-item" data-route="report"><i data-lucide="shield-alert" class="nav-icon"></i><span>Güvenlik Raporu</span></div>
+          <div class="nav-spacer"></div>
+          <div class="nav-item" data-route="settings"><i data-lucide="settings" class="nav-icon"></i><span>Ayarlar</span></div>
+          <div class="nav-item" id="btnLock" title="Kasayı kilitle"><i data-lucide="lock" class="nav-icon"></i><span>Kilitle</span></div>
+        </div>
+      </nav>
+
+      <!-- ROUTE: HOME — Parolalar -->
+      <div class="home-view" id="sidebarHome">
+        <div class="home-header">
+          <div class="category-tabs" id="categoryTabs">
+            <button class="cat-tab active" data-cat="">Tümü</button>
+            <button class="cat-tab" data-cat="_fav" title="Favoriler">★ Favoriler</button>
+            <button class="cat-tab" data-cat="sosyal">Sosyal</button>
+            <button class="cat-tab" data-cat="iş">İş</button>
+            <button class="cat-tab" data-cat="finans">Finans</button>
+            <button class="cat-tab" data-cat="eğlence">Eğlence</button>
+            <button class="cat-tab" data-cat="alışveriş">Alışveriş</button>
+            <button class="cat-tab" data-cat="e-posta">E-posta</button>
+            <button class="cat-tab" data-cat="diğer">Diğer</button>
+          </div>
+          <div class="tag-filter" id="tagFilter" style="display:none">
+            <span class="tag-filter-label">Etiket:</span>
+            <select id="tagSelect" class="field-select tag-select">
+              <option value="">Tüm etiketler</option>
+            </select>
+          </div>
+          <div class="home-toolbar">
+            <div class="home-search">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="searchInput" placeholder="Parola ara...">
+            </div>
+            <select id="sortSelect" class="sort-select" title="Sıralama">
+              <option value="name-asc">İsim A-Z</option>
+              <option value="name-desc">İsim Z-A</option>
+              <option value="date-desc">Son güncelleme (yeni)</option>
+              <option value="date-asc">Son güncelleme (eski)</option>
+              <option value="category-asc">Kategori</option>
+            </select>
+            <div class="home-stats">
+              <div class="stat-tile"><span class="stat-tile-num" id="entryCount">0</span><span class="stat-tile-label">Toplam</span></div>
+              <div class="stat-tile"><span class="stat-tile-num" id="statStrong">0</span><span class="stat-tile-label">Güçlü</span></div>
+              <div class="stat-tile"><span class="stat-tile-num" id="statWeak">0</span><span class="stat-tile-label">Zayıf</span></div>
+            </div>
+            <button class="btn-add-home" id="btnAdd"><i data-lucide="plus"></i> Yeni Ekle</button>
+          </div>
+        </div>
+        <div class="security-alerts" id="securityAlerts" style="display:none"></div>
+        <div class="entry-list" id="sidebarList"></div>
+        <div class="home-empty" id="homeEmpty" style="display:none">
+          <div class="home-empty-icon">🔐</div>
+          <div class="home-empty-title">Henüz parola yok</div>
+          <div class="home-empty-desc">İlk parolayı ekleyerek kasanı doldurmaya başla</div>
+          <button class="btn-add-home btn-add-home-lg" id="btnAddFromEmpty"><i data-lucide="plus"></i> İlk Parolayı Ekle</button>
+        </div>
+      </div>
+
+      <!-- ROUTE: Cards -->
+      <div class="panel-cards" id="panelCards" style="display:none">
+        <div class="cards-header">
+          <div>
+            <h2>Kayıtlı Kartlar</h2>
+            <p>Ödeme kartlarınızı güvenle saklayın</p>
+          </div>
+          <button class="btn-add-home" id="btnAddCard"><i data-lucide="plus"></i> Yeni Kart Ekle</button>
+        </div>
+        <div class="cards-list" id="cardsList"></div>
+        <div class="home-empty" id="cardsEmpty" style="display:none">
+          <div class="home-empty-icon">💳</div>
+          <div class="home-empty-title">Henüz kart yok</div>
+          <div class="home-empty-desc">Ödeme kartı ekleyerek hızlı ödeme yapın</div>
+          <button class="btn-add-home btn-add-home-lg" id="btnAddCardFromEmpty"><i data-lucide="plus"></i> İlk Kartı Ekle</button>
+        </div>
+      </div>
+
+      <!-- ROUTE: Payments -->
+      <div class="panel-payments" id="panelPayments" style="display:none">
+        <div class="payments-header">
+          <div>
+            <h2>Aylık Ödemeler</h2>
+            <p>Tekrarlayan ödemelerinizi ve kartlarınızı yönetin</p>
+          </div>
+          <button class="btn-add-home" id="btnAddPayment"><i data-lucide="plus"></i> Yeni Ödeme Ekle</button>
+        </div>
+        <div class="payments-summary" id="paymentsSummary"></div>
+        <div class="payments-list" id="paymentsList"></div>
+        <div class="home-empty" id="paymentsEmpty" style="display:none">
+          <div class="home-empty-icon">💸</div>
+          <div class="home-empty-title">Henüz ödeme yok</div>
+          <div class="home-empty-desc">Netflix, Spotify gibi aylık abonelikleri ekleyin</div>
+          <button class="btn-add-home btn-add-home-lg" id="btnAddPaymentFromEmpty"><i data-lucide="plus"></i> İlk Ödemeyi Ekle</button>
+        </div>
+      </div>
+
+      <!-- ROUTE: Notes -->
+      <div class="panel-notes" id="panelNotes" style="display:none">
+        <div class="notes-header">
+          <div>
+            <h2>Gizli Notlar</h2>
+            <p>Gizli kalması gereken notlarınızı güvenle saklayın</p>
+          </div>
+          <button class="btn-add-home" id="btnAddNote"><i data-lucide="plus"></i> Yeni Not Ekle</button>
+        </div>
+        <div class="notes-search">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="notesSearchInput" placeholder="Not ara...">
+        </div>
+        <div class="notes-list" id="notesList"></div>
+        <div class="home-empty" id="notesEmpty" style="display:none">
+          <div class="home-empty-icon">📝</div>
+          <div class="home-empty-title">Henüz not yok</div>
+          <div class="home-empty-desc">Gizli notlarınızı güvenle saklamaya başlayın</div>
+          <button class="btn-add-home btn-add-home-lg" id="btnAddNoteFromEmpty"><i data-lucide="plus"></i> İlk Notu Ekle</button>
+        </div>
+      </div>
+
+      <!-- ROUTE: Files -->
+      <div class="panel-files" id="panelFiles" style="display:none">
+        <div class="files-header">
+          <div>
+            <h2>Şifreli Dosya Kasası</h2>
+            <p>Belgelerinizi AES-256-GCM ile şifreli saklayın</p>
+          </div>
+          <button class="btn-add-home" id="btnUploadFile"><i data-lucide="upload-cloud"></i> Dosya Ekle</button>
+        </div>
+        <div class="files-drag-zone" id="filesDragZone">
+          <i data-lucide="folder-open" class="drag-icon"></i>
+          <span>Şifrelemek istediğiniz dosyayı seçmek için tıklayın</span>
+          <span class="drag-sub">Maksimum dosya boyutu: 15 MB</span>
+        </div>
+        <div class="files-list" id="filesList"></div>
+        <div class="home-empty" id="filesEmpty" style="display:none">
+          <div class="home-empty-icon">📁</div>
+          <div class="home-empty-title">Henüz dosya yok</div>
+          <div class="home-empty-desc">Kimlik kartları, sözleşmeler veya özel SSH anahtarları gibi dosyaları şifreli saklayın</div>
+          <button class="btn-add-home btn-add-home-lg" id="btnUploadFileFromEmpty"><i data-lucide="upload-cloud"></i> İlk Dosyayı Ekle</button>
+        </div>
+      </div>
+
+      <!-- ROUTE: Report -->
+      <div class="panel-report" id="panelReport" style="display:none">
+        <div class="report-header cards-header">
+          <h2>Güvenlik Raporu</h2>
+          <p>Parola sağlığınızı analiz edin — zayıf, tekrarlayan ve eski parolalar</p>
+        </div>
+        <div class="report-body">
+          <div class="report-dashboard">
+            <div class="report-chart-container">
+              <svg class="health-chart" width="120" height="120" viewBox="0 0 120 120">
+                <circle class="health-chart-bg" cx="60" cy="60" r="50" fill="none" stroke="#22273a" stroke-width="8" />
+                <circle class="health-chart-fill" cx="60" cy="60" r="50" fill="none" stroke="#30D5C8" stroke-width="8" stroke-dasharray="314.16" stroke-dashoffset="314.16" stroke-linecap="round" id="healthChartArc" />
+              </svg>
+              <div class="health-chart-value" id="healthChartValue">0%</div>
+              <div class="health-chart-label">Güvenlik Skoru</div>
+            </div>
+            <div class="report-summary" id="reportSummary"></div>
+          </div>
+          <div class="report-score-breakdown" id="reportScoreBreakdown"></div>
+          <div class="report-section report-section-actions">
+            <button class="cmd-btn primary" id="btnScanBreaches"><i data-lucide="shield-alert"></i> HIBP Sızıntı Taraması</button>
+            <span class="report-scan-status" id="reportScanStatus"></span>
+          </div>
+          <div class="report-section">
+            <h3><i data-lucide="skull"></i> Sızıntıya Uğramış Parolalar (HIBP)</h3>
+            <div class="report-list" id="reportBreachList"><div class="report-empty">Henüz tarama yapılmadı</div></div>
+          </div>
+          <div class="report-section">
+            <h3><i data-lucide="alert-triangle"></i> Zayıf Parolalar</h3>
+            <div class="report-list" id="reportWeakList"></div>
+          </div>
+          <div class="report-section">
+            <h3><i data-lucide="copy"></i> Tekrar Eden Parolalar</h3>
+            <div class="report-list" id="reportDuplicateList"></div>
+          </div>
+          <div class="report-section">
+            <h3><i data-lucide="clock"></i> Eski Parolalar (90+ gün)</h3>
+            <div class="report-list" id="reportOldList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROUTE: Settings -->
+      <div class="panel-settings" id="panelSettings" style="display:none">
+        <div class="settings-header">
+          <h2>Ayarlar</h2>
+          <p>Uygulama tercihlerinizi yönetin</p>
+        </div>
+        <div class="settings-body">
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="info"></i> Genel</h3>
+            <div class="settings-card">
+              <div class="settings-row">
+                <span class="settings-label">Tema</span>
+                <select id="themeSelect" class="field-select" style="max-width:160px">
+                  <option value="light">Açık</option>
+                  <option value="dark">Karanlık</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <span class="settings-label">Uygulama</span>
+                <span class="settings-value">VAULT — Şifre Yöneticisi</span>
+              </div>
+              <div class="settings-row">
+                <span class="settings-label">Sürüm</span>
+                <span class="settings-value" id="appVersion">2.4.0</span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="shield"></i> Güvenlik</h3>
+            <div class="settings-card">
+              <div class="settings-row">
+                <span class="settings-label">Master şifre</span>
+                <span class="settings-value settings-muted">Kasayı korur</span>
+              </div>
+              <div class="settings-row">
+                <span class="settings-label">Otomatik kilitleme</span>
+                <select id="autoLockSelect" class="field-select">
+                  <option value="0">Asla</option>
+                  <option value="1">1 dakika</option>
+                  <option value="2">2 dakika</option>
+                  <option value="5">5 dakika</option>
+                  <option value="10">10 dakika</option>
+                  <option value="15">15 dakika</option>
+                  <option value="30">30 dakika</option>
+                </select>
+              </div>
+              <button class="cmd-btn primary" id="btnChangeMasterPw"><i data-lucide="key"></i> Master Şifreyi Değiştir</button>
+              <hr class="settings-divider" style="margin: 16px 0; border: none; border-top: 1px solid var(--k-border);">
+              <div class="settings-row" id="settingsRowBio" style="display:none">
+                <span class="settings-label">Windows Hello Girişi</span>
+                <button class="cmd-btn" id="btnToggleBio" style="min-width:140px"><i data-lucide="fingerprint"></i> Aktif Et</button>
+              </div>
+              <div class="settings-row">
+                <span class="settings-label">İki Adımlı Doğrulama (2FA)</span>
+                <button class="cmd-btn" id="btnToggle2FA" style="min-width:140px"><i data-lucide="shield-check"></i> Aktif Et</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="shield-check"></i> Veritabanı Şifreleme</h3>
+            <div class="settings-card">
+              <p class="encryption-desc">Kasada saklanan verilerin şifrelenmesi için anahtar türetme gücünü ayarlayın. Yüksek değer = daha güvenli, açılış biraz yavaşlar.</p>
+              <div class="settings-row">
+                <span class="settings-label">PBKDF2 Tekrar Sayısı</span>
+                <select id="encryptionIterationsSelect" class="field-select">
+                  <option value="50000">50.000 (Hızlı)</option>
+                  <option value="100000" selected>100.000 (Önerilen)</option>
+                  <option value="200000">200.000 (Güçlü)</option>
+                  <option value="500000">500.000 (Maksimum)</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <span class="settings-label">Mevcut ayar</span>
+                <span class="settings-value settings-muted" id="encryptionCurrentValue">—</span>
+              </div>
+              <div class="settings-row">
+                <span class="settings-label">Master şifre</span>
+                <div class="field-box" style="max-width:200px">
+                  <input type="password" id="encryptionPasswordInput" placeholder="Doğrulama için">
+                </div>
+              </div>
+              <button class="cmd-btn primary" id="btnApplyEncryption"><i data-lucide="refresh-cw"></i> Değişiklikleri Uygula</button>
+              <button class="cmd-btn" id="btnBenchmarkPbdkf2"><i data-lucide="gauge"></i> PBKDF2 Performans Testi</button>
+              <div class="benchmark-results" id="benchmarkResults"></div>
+              <p class="encryption-note">Yeni ayarı uygulamak için master şifrenizi girin.</p>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="database"></i> Veri</h3>
+            <div class="settings-card">
+              <div class="settings-row">
+                <span class="settings-label">Veri konumu</span>
+                <span class="settings-value settings-muted settings-small" id="dataPath">—</span>
+              </div>
+              <div class="settings-row settings-row-actions">
+                <button class="cmd-btn primary" id="btnBackup" title="Şifreli kasa yedeği oluştur"><i data-lucide="save"></i> Yedek Al</button>
+                <button class="cmd-btn" id="btnExportJson"><i data-lucide="download"></i> JSON</button>
+                <button class="cmd-btn" id="btnExportCsv"><i data-lucide="download"></i> CSV</button>
+                <button class="cmd-btn" id="btnImport"><i data-lucide="upload"></i> İçe Aktar</button>
+              </div>
+              <p class="encryption-note">CSV: VAULT, Bitwarden, Chrome ve Firefox dışa aktarma formatları desteklenir.</p>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="chrome"></i> Tarayıcı Eklentisi</h3>
+            <div class="settings-card">
+              <p class="extension-desc">Chrome eklentisi ile tarayıcıda otomatik parola doldurma ve kaydetme.</p>
+              <div class="settings-row">
+                <span class="settings-label">Extension ID</span>
+                <div class="field-box extension-id-row">
+                  <input type="text" id="extensionIdInput" placeholder="Chrome'dan kopyalayın (chrome://extensions)" maxlength="64">
+                </div>
+              </div>
+              <div class="extension-steps">
+                <div class="extension-step"><span class="step-num">1</span> Chrome'da <code>chrome://extensions</code> → Geliştirici modu → Paketlenmemiş öğe yükle → <strong>extension</strong> klasörünü seçin</div>
+                <div class="extension-step"><span class="step-num">2</span> Yüklenen eklentinin <strong>ID</strong>'sini kopyalayıp yukarıya yapıştırın</div>
+                <div class="extension-step"><span class="step-num">3</span> "Native Host Kur" butonuna tıklayın</div>
+              </div>
+              <div class="settings-row settings-row-actions" style="margin-top:16px;flex-wrap:wrap;gap:8px">
+                <button class="cmd-btn primary" id="btnExtensionInstall"><i data-lucide="plug"></i> Native Host Kur</button>
+                <button class="cmd-btn" id="btnExtensionVerify" title="Kurulumun tamamlanıp tamamlanmadığını kontrol et"><i data-lucide="check-circle"></i> Kurulumu Kontrol Et</button>
+                <button class="cmd-btn" id="btnOpenExtensionFolder" title="Eklenti klasörünü göster"><i data-lucide="folder-open"></i> Eklenti Klasörünü Aç</button>
+              </div>
+              <p class="extension-status" id="extensionStatus"></p>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="activity"></i> Güvenlik Günlüğü</h3>
+            <div class="settings-card">
+              <p class="encryption-desc">Kasa kilidinin açılması, parola kopyalama ve veri değişiklikleri gibi güvenlik işlemlerinin zaman damgalı log kayıtları.</p>
+              <div class="audit-log-container">
+                <div class="audit-log-list" id="auditLogList"></div>
+              </div>
+              <button class="cmd-btn danger" id="btnClearAuditLogs" style="margin-top:12px"><i data-lucide="trash-2"></i> Log Geçmişini Temizle</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title"><i data-lucide="help-circle"></i> Yardım</h3>
+            <div class="settings-card">
+              <div class="settings-row">
+                <span class="settings-label">Hakkında</span>
+                <span class="settings-value settings-muted">Parolalar, kartlar, ödemeler ve gizli notlarınızı güvenle saklayın.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-content" style="display:none">
+      <!-- PANEL: Generator -->
+      <div class="panel-generator" id="panelGenerator" style="display:none">
+        <div class="gen-header"><h2>Şifre Üretici</h2><p>Güçlü, rastgele şifre oluşturun</p></div>
+        <div class="gen-options">
+          <div class="field"><div class="field-label">Uzunluk</div><input type="number" id="genLength" min="8" max="64" value="16" class="gen-input"></div>
+          <label class="gen-check"><input type="checkbox" id="genUpper" checked> Büyük harf</label>
+          <label class="gen-check"><input type="checkbox" id="genLower" checked> Küçük harf</label>
+          <label class="gen-check"><input type="checkbox" id="genNumbers" checked> Rakam</label>
+          <label class="gen-check"><input type="checkbox" id="genSymbols" checked> Özel karakter</label>
+        </div>
+        <div class="gen-result">
+          <div class="field-box gen-result-box"><input type="password" id="genOutput" readonly><span class="field-action" id="genCopy"><i data-lucide="copy"></i></span></div>
+          <button class="cmd-btn primary" id="genGenerate"><i data-lucide="refresh-cw"></i> Yeni Oluştur</button>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide-over detay paneli (her zaman üstte, route'dan bağımsız) -->
+  <div class="detail-drawer" id="detailDrawer">
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer-panel" id="drawerPanel">
+      <div class="drawer-header" data-electron-no-drag>
+        <button type="button" class="drawer-close" id="drawerClose" aria-label="Kapat"><i data-lucide="x"></i></button>
+        <span class="drawer-title">Parola Detayı</span>
+      </div>
+      <div class="detail" id="detailArea">
+        <div class="detail-view" id="detailView">
+          <div class="command-bar">
+            <button class="cmd-btn" id="btnToggleFav" title="Favorilere ekle/kaldır"><i data-lucide="star" id="btnToggleFavIcon"></i> Favori</button>
+            <button class="cmd-btn primary" id="btnEdit"><i data-lucide="pencil"></i> Düzenle</button>
+            <button class="cmd-btn" id="btnCopyPw"><i data-lucide="copy"></i> Kopyala</button>
+            <button class="cmd-btn" id="btnOpenUrl" title="Siteyi tarayıcıda aç"><i data-lucide="external-link"></i> Siteye Git</button>
+            <div class="cmd-sep"></div>
+            <button class="cmd-btn danger" id="btnDelete"><i data-lucide="trash-2"></i> Sil</button>
+          </div>
+          <div class="detail-body">
+            <div class="detail-form">
+              <div class="detail-hero">
+                <div class="detail-ico" id="detailIcon">🔐</div>
+                <div class="detail-name-block">
+                  <div class="detail-name" id="detailName">—</div>
+                  <div class="detail-url" id="detailUrl">—</div>
+                </div>
+              </div>
+              <div class="strength-track"><div class="strength-fill" id="strengthFill"></div></div>
+              <div class="totp-block" id="totpBlock" style="display:none">
+                <div><div class="totp-label-txt">2FA Kodu</div><div class="totp-num" id="totpNum">000 000</div></div>
+                <div class="totp-right">
+                  <div class="totp-timer-num" id="totpSec">30s</div>
+                  <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
+                    <circle cx="14" cy="14" r="11" fill="none" stroke="#22273a" stroke-width="3"/>
+                    <circle cx="14" cy="14" r="11" fill="none" stroke="#30D5C8" stroke-width="3" stroke-linecap="round" stroke-dasharray="69.1" stroke-dashoffset="0" id="totpArc"/>
+                  </svg>
+                  <div class="field-action" id="copyTotp" data-copy="totp" title="Kopyala"><i data-lucide="copy" class="icon-sm"></i></div>
+                </div>
+              </div>
+              <div class="field"><div class="field-label">Kullanıcı Adı</div>
+                <div class="field-box"><input id="inputUsername" readonly data-field="username"><span class="field-action" data-copy="username"><i data-lucide="copy" class="icon-sm"></i></span></div></div>
+              <div class="field"><div class="field-label">Şifre</div>
+                <div class="field-box"><input type="password" id="inputPassword" readonly data-field="password"><span class="field-action" id="pwToggle">👁</span><span class="field-action" data-copy="password"><i data-lucide="copy" class="icon-sm"></i></span></div></div>
+              <div class="field"><div class="field-label">URL</div>
+                <div class="field-box"><input id="inputUrl" readonly data-field="url"><span class="field-action" data-copy="url"><i data-lucide="link" class="icon-sm"></i></span></div></div>
+              <div class="field"><div class="field-label">Notlar</div>
+                <div class="field-box field-box-multiline"><input id="inputNotes" readonly data-field="notes"></div></div>
+              <div class="custom-fields-block" id="customFieldsBlock" style="display:none">
+                <div class="field-label">Özel Alanlar</div>
+                <div id="customFieldsList"></div>
+              </div>
+            </div>
+            <div class="detail-stats">
+              <div class="stat-block"><div class="stat-label">Güvenlik Skoru</div><div class="stat-value" id="statScore">—</div><div class="stat-bar"><div class="stat-bar-fill" id="statBar"></div></div></div>
+              <div class="stat-block"><div class="stat-label">Şifre Uzunluğu</div><div class="stat-value" id="statLength">—</div><div class="stat-sub" id="statStrength">—</div></div>
+              <div class="stat-block"><div class="stat-label">Son Güncelleme</div><div class="stat-value" id="statUpdated">—</div></div>
+              <div class="stat-block"><div class="stat-label">Etiketler</div><div class="tag-list" id="tagList"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-edit" id="detailEdit" style="display:none">
+          <div class="command-bar"><button class="cmd-btn primary" id="btnSave"><i data-lucide="check"></i> Kaydet</button><button class="cmd-btn" id="btnCancelEdit">İptal</button></div>
+          <div class="detail-form detail-form-edit">
+            <div class="field"><div class="field-label">Başlık</div><div class="field-box"><input id="editName" placeholder="örn. GitHub"></div></div>
+            <div class="field"><div class="field-label">URL</div><div class="field-box"><input id="editUrl" placeholder="https://..."></div></div>
+            <div class="field"><div class="field-label">Kullanıcı Adı / E-posta</div><div class="field-box"><input id="editUsername" placeholder="kullanıcı@email.com"></div></div>
+            <div class="field"><div class="field-label">Şifre</div><div class="field-box"><input type="password" id="editPassword" placeholder="Şifre"><span class="field-action" id="editPwGen" title="Oluştur">🎲</span></div></div>
+            <div class="field"><div class="field-label">2FA Gizli Anahtarı (TOTP)</div><div class="field-box"><input type="password" id="editTotpSecret" placeholder="JBSWY3DPEHPK3PXP (Base32)"></div></div>
+            <div class="field"><div class="field-label">Notlar</div><div class="field-box field-box-multiline"><input id="editNotes" placeholder="İsteğe bağlı notlar"></div></div>
+            <div class="field"><div class="field-label">Kategori</div><select id="editCategory" class="field-select"><option value="">Seçin</option><option value="sosyal">Sosyal</option><option value="iş">İş</option><option value="finans">Finans</option><option value="eğlence">Eğlence</option><option value="alışveriş">Alışveriş</option><option value="e-posta">E-posta</option><option value="diğer">Diğer</option></select></div>
+            <div class="field"><div class="field-label">Etiketler (virgülle ayırın)</div><div class="field-box"><input id="editTags" placeholder="iş, 2fa, ssh"></div></div>
+            <div class="custom-fields-edit" id="customFieldsEdit">
+              <div class="field-label">Özel Alanlar</div>
+              <div id="customFieldsEditList"></div>
+              <button type="button" class="cmd-btn cmd-btn-sm" id="btnAddCustomField"><i data-lucide="plus"></i> Alan Ekle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ödeme detay drawer -->
+  <div class="detail-drawer" id="paymentDrawer">
+    <div class="drawer-backdrop" id="paymentDrawerBackdrop"></div>
+    <div class="drawer-panel drawer-panel-payment">
+      <div class="drawer-header">
+        <button class="drawer-close" id="paymentDrawerClose"><i data-lucide="x"></i></button>
+        <span class="drawer-title">Ödeme Detayı</span>
+      </div>
+      <div class="payment-detail" id="paymentDetailArea">
+        <div class="payment-detail-view" id="paymentDetailView">
+          <div class="command-bar">
+            <button class="cmd-btn primary" id="paymentBtnEdit"><i data-lucide="pencil"></i> Düzenle</button>
+            <div class="cmd-sep"></div>
+            <button class="cmd-btn danger" id="paymentBtnDelete"><i data-lucide="trash-2"></i> Sil</button>
+          </div>
+          <div class="payment-detail-body">
+            <div class="payment-view-hero">
+              <div class="payment-view-name" id="paymentViewName">—</div>
+              <div class="payment-view-amount" id="paymentViewAmount">—</div>
+              <div class="payment-view-meta">
+                <span id="paymentViewDue">Vade: —</span>
+                <span id="paymentViewCard">Kart: —</span>
+              </div>
+            </div>
+            <div class="payment-view-notes" id="paymentViewNotes"></div>
+          </div>
+        </div>
+        <div class="payment-detail-edit" id="paymentDetailEdit" style="display:none">
+          <div class="command-bar"><button class="cmd-btn primary" id="paymentBtnSave"><i data-lucide="check"></i> Kaydet</button><button class="cmd-btn" id="paymentBtnCancel">İptal</button></div>
+          <div class="detail-form detail-form-edit">
+            <div class="field"><div class="field-label">Ödeme Adı</div><div class="field-box"><input id="paymentEditName" placeholder="örn. Netflix"></div></div>
+            <div class="field"><div class="field-label">Tutar</div><div class="field-box field-box-row"><input type="number" id="paymentEditAmount" placeholder="99.99" step="0.01"><select id="paymentEditCurrency" class="field-select-currency"><option value="TRY">₺ TRY</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select></div></div>
+            <div class="field"><div class="field-label">Vade Günü (aylık)</div><div class="field-box"><input type="number" id="paymentEditDueDay" placeholder="15" min="1" max="31"></div></div>
+            <div class="field"><div class="field-label">Kart</div><select id="paymentEditCard" class="field-select"><option value="">Kart seçin</option></select></div>
+            <div class="field"><div class="field-label">Notlar</div><div class="field-box field-box-multiline"><input id="paymentEditNotes" placeholder="İsteğe bağlı"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not detay drawer -->
+  <div class="detail-drawer" id="noteDrawer">
+    <div class="drawer-backdrop" id="noteDrawerBackdrop"></div>
+    <div class="drawer-panel drawer-panel-note">
+      <div class="drawer-header">
+        <button class="drawer-close" id="noteDrawerClose"><i data-lucide="x"></i></button>
+        <span class="drawer-title">Not Detayı</span>
+      </div>
+      <div class="note-detail" id="noteDetailArea">
+        <div class="note-detail-view" id="noteDetailView">
+          <div class="command-bar">
+            <button class="cmd-btn primary" id="noteBtnEdit"><i data-lucide="pencil"></i> Düzenle</button>
+            <button class="cmd-btn" id="noteBtnCopy"><i data-lucide="copy"></i> Kopyala</button>
+            <div class="cmd-sep"></div>
+            <button class="cmd-btn danger" id="noteBtnDelete"><i data-lucide="trash-2"></i> Sil</button>
+          </div>
+          <div class="note-detail-body">
+            <div class="note-view-hero">
+              <div class="note-view-ico" id="noteViewIcon">📝</div>
+              <div class="note-view-title" id="noteViewTitle">—</div>
+              <div class="note-view-date" id="noteViewDate">—</div>
+            </div>
+            <div class="note-view-content" id="noteViewContent">—</div>
+          </div>
+        </div>
+        <div class="note-detail-edit" id="noteDetailEdit" style="display:none">
+          <div class="command-bar"><button class="cmd-btn primary" id="noteBtnSave"><i data-lucide="check"></i> Kaydet</button><button class="cmd-btn" id="noteBtnCancel">İptal</button></div>
+          <div class="detail-form detail-form-edit">
+            <div class="field"><div class="field-label">Başlık</div><div class="field-box"><input id="noteEditTitle" placeholder="Not başlığı"></div></div>
+            <div class="field"><div class="field-label">İçerik</div><div class="field-box field-box-multiline field-box-textarea"><textarea id="noteEditContent" placeholder="Not içeriğini yazın..." rows="6"></textarea></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kart detay drawer -->
+  <div class="detail-drawer" id="cardDrawer">
+    <div class="drawer-backdrop" id="cardDrawerBackdrop"></div>
+    <div class="drawer-panel drawer-panel-card">
+      <div class="drawer-header">
+        <button class="drawer-close" id="cardDrawerClose"><i data-lucide="x"></i></button>
+        <span class="drawer-title">Kart Detayı</span>
+      </div>
+      <div class="card-detail" id="cardDetailArea">
+        <div class="card-detail-view" id="cardDetailView">
+          <div class="command-bar">
+            <button class="cmd-btn primary" id="cardBtnEdit"><i data-lucide="pencil"></i> Düzenle</button>
+            <button class="cmd-btn" id="cardBtnCopyNum"><i data-lucide="copy"></i> Kart No</button>
+            <button class="cmd-btn" id="cardBtnCopyExp"><i data-lucide="copy"></i> Son Kullanma</button>
+            <div class="cmd-sep"></div>
+            <button class="cmd-btn danger" id="cardBtnDelete"><i data-lucide="trash-2"></i> Sil</button>
+          </div>
+          <div class="card-detail-body">
+            <div class="card-preview" id="cardPreview">
+              <div class="card-preview-brand" id="cardBrand">Visa</div>
+              <div class="card-preview-number" id="cardNumber">•••• •••• •••• 4242</div>
+              <div class="card-preview-row">
+                <span class="card-preview-holder" id="cardHolder">—</span>
+                <span class="card-preview-expiry" id="cardExpiry">—</span>
+              </div>
+              <div class="card-preview-cvc" id="cardCvcRow" style="display:none">CVC: ••• <button type="button" class="cmd-btn small" id="cardBtnCopyCvc"><i data-lucide="copy"></i></button></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-detail-edit" id="cardDetailEdit" style="display:none">
+          <div class="command-bar"><button class="cmd-btn primary" id="cardBtnSave"><i data-lucide="check"></i> Kaydet</button><button class="cmd-btn" id="cardBtnCancel">İptal</button></div>
+          <div class="detail-form detail-form-edit">
+            <div class="field"><div class="field-label">Kart Adı</div><div class="field-box"><input id="cardEditName" placeholder="örn. Ana Kredi Kartı"></div></div>
+            <div class="field"><div class="field-label">Kart Markası</div><select id="cardEditBrand" class="field-select"><option value="Visa">Visa</option><option value="Mastercard">Mastercard</option><option value="Troy">Troy</option><option value="Diğer">Diğer</option></select></div>
+            <div class="field"><div class="field-label">Kart Numarası</div><div class="field-box"><input id="cardEditNumber" placeholder="16 haneli numara" maxlength="19"></div></div>
+            <div class="field"><div class="field-label">Kart Sahibi</div><div class="field-box"><input id="cardEditHolder" placeholder="AD SOYAD"></div></div>
+            <div class="field"><div class="field-label">Son Kullanma (AA/YY)</div><div class="field-box"><input id="cardEditExpiry" placeholder="12/28"></div></div>
+            <div class="field"><div class="field-label">CVC/CVV</div><div class="field-box"><input type="password" id="cardEditCvc" placeholder="123" maxlength="4" autocomplete="off"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tarayıcı: Şifre kaydedilsin mi? modal -->
+  <div class="modal-overlay" id="savePasswordModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i data-lucide="key" class="modal-icon"></i> Şifre Kaydedilsin mi?</h3>
+        <button class="modal-close" id="savePasswordModalClose"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="save-password-desc">Tarayıcıda giriş yaptınız. Bu parolayı kasaya ekleyelim mi?</p>
+        <div class="save-password-preview">
+          <div class="save-password-row">
+            <span class="save-password-label">Site</span>
+            <span class="save-password-value" id="savePasswordSite">—</span>
+          </div>
+          <div class="save-password-row">
+            <span class="save-password-label">Kullanıcı</span>
+            <span class="save-password-value" id="savePasswordUsername">—</span>
+          </div>
+          <div class="save-password-row">
+            <span class="save-password-label">Şifre</span>
+            <span class="save-password-value" id="savePasswordPreview">••••••••</span>
+            <button type="button" class="field-action save-password-toggle" id="savePasswordToggle" title="Göster/Gizle"><i data-lucide="eye"></i></button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="cmd-btn primary" id="savePasswordConfirm"><i data-lucide="check"></i> Kaydet</button>
+          <button class="cmd-btn" id="savePasswordCancel">İptal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master şifre değiştir modal -->
+  <div class="modal-overlay" id="changeMasterPwModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Master Şifreyi Değiştir</h3>
+        <button class="modal-close" id="changePwModalClose"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><div class="field-label">Mevcut şifre</div><div class="field-box"><input type="password" id="changePwCurrent" placeholder="••••••••"></div></div>
+        <div class="field"><div class="field-label">Yeni şifre</div><div class="field-box"><input type="password" id="changePwNew" placeholder="En az 6 karakter"></div></div>
+        <div class="field"><div class="field-label">Yeni şifre (tekrar)</div><div class="field-box"><input type="password" id="changePwConfirm" placeholder="••••••••"></div></div>
+        <p class="lock-error" id="changePwError"></p>
+        <div class="modal-actions">
+          <button class="cmd-btn primary" id="changePwSubmit"><i data-lucide="check"></i> Değiştir</button>
+          <button class="cmd-btn" id="changePwCancel">İptal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2FA Kurulum Modal -->
+  <div class="modal-overlay" id="modal2faSetup">
+    <div class="modal-content" style="max-width:420px">
+      <div class="modal-header">
+        <h3>İki Adımlı Doğrulama (2FA) Kurulumu</h3>
+        <button class="modal-close" id="modal2faSetupClose"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" id="modal2faStep1">
+        <p class="settings-value" style="margin-bottom:12px; font-size:13px; line-height:1.5; color:var(--k-text2)">Aşağıdaki 16 haneli gizli anahtarı kopyalayın ve mobil kimlik doğrulama uygulamanıza (Google Authenticator, Bitwarden vb.) manuel olarak ekleyin.</p>
+        <div class="field">
+          <div class="field-label">Gizli Anahtar (Secret Key)</div>
+          <div class="field-box" style="background:var(--k-bg2); padding:10px; border-radius:6px; border:1px solid var(--k-border); font-family:monospace; font-size:16px; font-weight:bold; letter-spacing:1px; text-align:center; justify-content:center; user-select:all" id="text2faSecret">
+            JBSWY3DPEHPK3PXP
+          </div>
+        </div>
+        <p style="margin: 16px 0 8px 0; font-size:12px; font-weight:500; color:var(--k-text)">Kurulumu tamamlamak için uygulamanızdaki 6 haneli kodu girin:</p>
+        <div class="field">
+          <div class="field-label">Doğrulama Kodu</div>
+          <div class="field-box">
+            <input type="text" id="input2faVerifyCode" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing:4px; font-size:18px">
+          </div>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <div class="field-label">Master Şifre</div>
+          <div class="field-box">
+            <input type="password" id="input2faPassword" placeholder="Onaylamak için şifrenizi girin">
+          </div>
+        </div>
+        <p class="lock-error" id="error2faSetup" style="margin-top:8px"></p>
+        <div class="modal-actions" style="margin-top:20px">
+          <button class="cmd-btn primary" id="btn2faVerifySubmit"><i data-lucide="check"></i> Doğrula ve Aktif Et</button>
+          <button class="cmd-btn" id="btn2faVerifyCancel">İptal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notif"></div>
+
+  <script src="lucide.min.js"></script>
+  <script src="utils.js"></script>
+  <script src="renderer.js"></script>
+  </body>
+  </html>
