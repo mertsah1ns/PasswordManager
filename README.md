@@ -268,7 +268,7 @@ Projemiz açık kaynaktır! Hataları bildirmek, özellik önerileri yapmak veya
 
 - **Bug Raporları:** [GitHub Issues](https://github.com/mertsah1ns/PasswordManager/issues)
 - **Özellik İstekleri:** [GitHub Discussions](https://github.com/mertsah1ns/PasswordManager/discussions)
-- **Email:** your.email@example.com
+
 
 ---
 
