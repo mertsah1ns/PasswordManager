@@ -4,7 +4,7 @@
 
 > Modern, güvenli ve açık kaynaklı şifre yöneticisi. Masaüstü uygulaması ve tarayıcı eklentisi ile tam entegrasyonlu parola yönetimi.
 
-**VAULT**, Windows 11 tasarım dili ile geliştirilmiş, harika bir kullanıcı deneyimi sunan şifre yöneticisidir. Masaüstü uygulaması ile parolalarınızı güvenli şekilde yönetin, Chrome eklentisi ile web sitelerinde otomatik doldurma ve kaydetme özelliklerinden yararlanın.
+**VAULT**, Windows 11 tasarım dili ile geliştirilmiş, harika bir kullanıcı deneyimi sunan şifre yöneticisidir.
 
 ---
 
@@ -254,7 +254,6 @@ Projemiz açık kaynaktır! Hataları bildirmek, özellik önerileri yapmak veya
 ---
 
 
-
 ## Uyarılar
 
 - **Üretim Kullanımı:** Bu uygulama eğitim amaçlıdır. Üretim ortamında kullanmadan önce kapsamlı güvenlik denetimine tabi tutulmalıdır.
@@ -264,21 +263,10 @@ Projemiz açık kaynaktır! Hataları bildirmek, özellik önerileri yapmak veya
 
 ---
 
-##  İletişim & Destek
-
-- **Bug Raporları:** [GitHub Issues](https://github.com/mertsah1ns/PasswordManager/issues)
-- **Özellik İstekleri:** [GitHub Discussions](https://github.com/mertsah1ns/PasswordManager/discussions)
-
-
----
-
 ##  Teşekkürler
 
-- **Lucide** — Harika ikon kütüphanesi
+- **Lucide** — İkon kütüphanesi
 - **Have I Been Pwned** — Parola sızıntı veritabanı
 - **Electron** — Masaüstü app framework'ü
-- **Açık kaynak topluluğu** — Desteği ve ilhami için
-
+- 
 ---
-
-**VAULT ile parolalarınızı güvenli tutun. Açık, şeffaf ve denetlenebilir.** 🔐
